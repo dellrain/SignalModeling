@@ -1,0 +1,12 @@
+﻿<Window x:Class="SignalModeling.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:oxy="http://oxyplot.org/wpf"
+        mc:Ignorable="d"
+        Title="Signal Modeling App" Height="600" Width="900" Loaded="Window_Loaded">
+    <Grid>
+        <UniformGrid x:Name="uniformGrid" Rows="4" Columns="3"/>
+    </Grid>
+</Window>
