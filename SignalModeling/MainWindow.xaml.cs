@@ -35,18 +35,22 @@ namespace SignalModeling
 
         private void PlotSignals()
         {
-            double[] frequencies = { 4, 32 };
+         
             double[] modCoefficients = { 1, 20, 30 };
 
             int plotIndex = 0;
 
-            foreach (var frequency in frequencies)
-            {
+                double[] squareWave = GenerateSquareWave(4);
+                double[] carrierSignal = GenerateCarrierSignal(32);
+
+                // Square Wave Modeling
+                PlotSignalAndSpectrum(squareWave, "Square Wave Modeling", plotIndex++);
+
+                // Carrier Signal Modeling
+                PlotSignalAndSpectrum(carrierSignal, "Carrier Signal Modeling", plotIndex++);
+
                 foreach (var modCoefficient in modCoefficients)
                 {
-                    double[] squareWave = GenerateSquareWave(frequency);
-                    double[] carrierSignal = GenerateCarrierSignal(frequency);
-
                     // Amplitude Modulation
                     double[] amplitudeModulatedSignal = AmplitudeModulation(squareWave, carrierSignal);
                     PlotSignalAndSpectrum(amplitudeModulatedSignal, "Amplitude Modulation", plotIndex++);
@@ -59,8 +63,9 @@ namespace SignalModeling
                     double[] phaseModulatedSignal = PhaseModulation(squareWave, modCoefficient);
                     PlotSignalAndSpectrum(phaseModulatedSignal, "Phase Modulation", plotIndex++);
                 }
-            }
+            
         }
+
 
         private void PlotSignalAndSpectrum(double[] signal, string modulationType, int plotIndex)
         {
