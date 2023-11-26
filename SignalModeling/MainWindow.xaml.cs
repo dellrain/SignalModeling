@@ -6,7 +6,6 @@ using System;
 using System.Linq;
 using System.Numerics;
 using System.Windows;
-using System.Windows.Controls.Primitives;
 
 namespace SignalModeling
 {
@@ -35,76 +34,136 @@ namespace SignalModeling
 
         private void PlotSignals()
         {
-         
-            double[] modCoefficients = { 1, 20, 30 };
-
             int plotIndex = 0;
 
-                double[] squareWave = GenerateSquareWave(4);
-                double[] carrierSignal = GenerateCarrierSignal(32);
+            double[] squareWave = GenerateSquareWave(4);
+            double[] carrierSignal = GenerateCarrierSignal(32);
+            double[] amplitudeModulatedSignal = AmplitudeModulation(squareWave, carrierSignal);
+            double[] frequencyModulatedSignal = FrequencyModulation(squareWave, 20);
+            double[] phaseModulatedSignal = PhaseModulation(squareWave, 30);
 
-                // Square Wave Modeling
-                PlotSignalAndSpectrum(squareWave, "Square Wave Modeling", plotIndex++);
+            // Square Wave Modeling
+            PlotGraph(squareWave, "Square Wave Modeling", plotIndex++);
 
-                // Carrier Signal Modeling
-                PlotSignalAndSpectrum(carrierSignal, "Carrier Signal Modeling", plotIndex++);
+            // Carrier Signal Modeling
+            PlotGraph(carrierSignal, "Carrier Wave Modeling", plotIndex++);
 
-                foreach (var modCoefficient in modCoefficients)
-                {
-                    // Amplitude Modulation
-                    double[] amplitudeModulatedSignal = AmplitudeModulation(squareWave, carrierSignal);
-                    PlotSignalAndSpectrum(amplitudeModulatedSignal, "Amplitude Modulation", plotIndex++);
+            // Amplitude Modulation
+            PlotGraph(amplitudeModulatedSignal, "Amplitude Modulation", plotIndex++);
 
-                    // Frequency Modulation
-                    double[] frequencyModulatedSignal = FrequencyModulation(squareWave, modCoefficient);
-                    PlotSignalAndSpectrum(frequencyModulatedSignal, "Frequency Modulation", plotIndex++);
+            // Frequency Modulation
+            PlotGraph(frequencyModulatedSignal, "Frequency Modulation", plotIndex++);
 
-                    // Phase Modulation
-                    double[] phaseModulatedSignal = PhaseModulation(squareWave, modCoefficient);
-                    PlotSignalAndSpectrum(phaseModulatedSignal, "Phase Modulation", plotIndex++);
-                }
-            
+            // Phase Modulation
+            PlotGraph(phaseModulatedSignal, "Phase Modulation", plotIndex++);
+
+            // Spectrum of Amplitude Modulated Signal
+            var amplitudeModulatedSpectrum = CalculateSpectrum(amplitudeModulatedSignal);
+            PlotSpectrumGraph(amplitudeModulatedSpectrum.Item1, amplitudeModulatedSpectrum.Item2, "Amplitude Modulated Signal Spectrum", plotIndex++);
+
+            // Spectrum of Frequency Modulated Signal
+            var frequencyModulatedSpectrum = CalculateSpectrum(frequencyModulatedSignal);
+            PlotSpectrumGraph(frequencyModulatedSpectrum.Item1, frequencyModulatedSpectrum.Item2, "Frequency Modulated Signal Spectrum", plotIndex++);
+
+            // Spectrum of Phase Modulated Signal
+            var phaseModulatedSpectrum = CalculateSpectrum(phaseModulatedSignal);
+            PlotSpectrumGraph(phaseModulatedSpectrum.Item1, phaseModulatedSpectrum.Item2, "Phase Modulated Signal Spectrum", plotIndex++);
+
+            // Filtered Spectrum of Amplitude Modulated Signal
+            var filteredAmplitudeModulatedSpectrum = FilterSpectrum(amplitudeModulatedSpectrum.Item1, amplitudeModulatedSpectrum.Item2, 25, 40);
+            PlotFilteredSpectrumGraph(amplitudeModulatedSpectrum.Item1, filteredAmplitudeModulatedSpectrum, "Filtered Spectrum of Amplitude Modulated Signal", plotIndex++);
+
+
+            // Filtered Spectrum of Frequency Modulated Signal
+            var filteredFrequencyModulatedSpectrum = FilterSpectrum(frequencyModulatedSpectrum.Item1, frequencyModulatedSpectrum.Item2, 20, 80);
+            PlotFilteredSpectrumGraph(frequencyModulatedSpectrum.Item1, filteredFrequencyModulatedSpectrum, "Filtered Spectrum of Frequency Modulated Signal", plotIndex++);
+
+            // Filtered Spectrum of Phase Modulated Signal
+            var filteredPhaseModulatedSpectrum = FilterSpectrum(phaseModulatedSpectrum.Item1, phaseModulatedSpectrum.Item2, 25, 35);
+            PlotFilteredSpectrumGraph(phaseModulatedSpectrum.Item1, filteredPhaseModulatedSpectrum, "Filtered Spectrum of Phase Modulated Signal", plotIndex++);
+
+            ShowPlots();
         }
 
-
-        private void PlotSignalAndSpectrum(double[] signal, string modulationType, int plotIndex)
+        private void PlotGraph(double[] data, string title, int plotIndex)
         {
-            if (plotIndex < plotModels.Length && plotIndex + 6 < plotModels.Length)
+            if (plotIndex >= 0 && plotIndex < plotModels.Length)
             {
                 var signalSeries = new LineSeries();
-                for (int i = 0; i < timeValues.Length; i++)
-                {
-                    signalSeries.Points.Add(new DataPoint(timeValues[i], signal[i]));
-                }
+                for (int i = 0; i < data.Length; i++)
+                    signalSeries.Points.Add(new DataPoint(timeValues[i], data[i]));
 
                 var signalModel = plotModels[plotIndex];
-                signalModel.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, Title = "Time (s)" });
-                signalModel.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Title = "Amplitude" });
                 signalModel.Series.Add(signalSeries);
-                signalModel.Title = $"{modulationType} Signal";
-                signalModel.Subtitle = $"Frequency: {modulationType.Contains("Frequency")}, Mod. Coeff.: {modulationType.Contains("Modulation")}";
-
-                var spectrum = CalculateSpectrum(signal);
-                var spectrumSeries = new LineSeries();
-                for (int i = 0; i < spectrum.Item1.Length; i++)
-                {
-                    spectrumSeries.Points.Add(new DataPoint(spectrum.Item1[i], spectrum.Item2[i]));
-                }
-
-                var spectrumModel = plotModels[plotIndex + 6];
-                spectrumModel.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, Title = "Frequency (Hz)", Minimum = 0, Maximum = 65 });
-                spectrumModel.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Title = "Magnitude" });
-                spectrumModel.Series.Add(spectrumSeries);
-                spectrumModel.Title = $"{modulationType} Spectrum";
-                spectrumModel.Subtitle = $"Frequency: {modulationType.Contains("Frequency")}, Mod. Coeff.: {modulationType.Contains("Modulation")}";
+                signalModel.Title = title;
             }
             else
             {
-                // Обработка сценария, когда индекс находится за пределами массива
                 Console.WriteLine($"Invalid plot index: {plotIndex}");
             }
         }
 
+        private void PlotSpectrumGraph(double[] frequencies, double[] magnitudes, string title, int plotIndex)
+        {
+            if (plotIndex >= 0 && plotIndex < plotModels.Length)
+            {
+                var spectrumSeries = new LineSeries();
+                for (int i = 0; i < frequencies.Length; i++)
+                {
+                    spectrumSeries.Points.Add(new DataPoint(frequencies[i], magnitudes[i]));
+                }
+
+                var spectrumModel = plotModels[plotIndex];
+                spectrumModel.Series.Add(spectrumSeries);
+                spectrumModel.Title = title;
+
+                // Настройка осей для центрирования
+                spectrumModel.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, Title = "Frequency (Hz)", Minimum = 0, Maximum = 100 });
+                spectrumModel.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Title = "Magnitude" });
+            }
+            else
+            {
+                Console.WriteLine($"Invalid spectrum plot index: {plotIndex}");
+            }
+        }
+
+        private void PlotFilteredSpectrumGraph(double[] frequencies, double[] filteredSpectrum, string title, int plotIndex)
+        {
+            if (plotIndex >= 0 && plotIndex < plotModels.Length)
+            {
+                var filteredSpectrumSeries = new LineSeries();
+                for (int i = 0; i < frequencies.Length; i++)
+                {
+                    filteredSpectrumSeries.Points.Add(new DataPoint(frequencies[i], filteredSpectrum[i]));
+                }
+
+                var filteredSpectrumModel = plotModels[plotIndex];
+                filteredSpectrumModel.Series.Add(filteredSpectrumSeries);
+                filteredSpectrumModel.Title = title;
+
+                // Настройка осей для центрирования
+                filteredSpectrumModel.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, Title = "Frequency (Hz)", Minimum = 0, Maximum = 100 });
+                filteredSpectrumModel.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Title = "Magnitude" });
+            }
+            else
+            {
+                Console.WriteLine($"Invalid filtered spectrum plot index: {plotIndex}");
+            }
+        }
+
+
+        private void ShowPlots()
+        {
+            for (int i = 0; i < plotModels.Length; i++)
+            {
+                var plotView = new OxyPlot.Wpf.PlotView();
+                plotView.Model = plotModels[i];
+                plotView.Width = 430;
+                plotView.Height = 253;
+
+                uniformGrid.Children.Add(plotView);
+            }
+        }
 
         private double[] GenerateTimeArray()
         {
@@ -135,18 +194,15 @@ namespace SignalModeling
             return result;
         }
 
-
-        private double[] AmplitudeModulation(double[] sig1, double[] sig2)
+        private double[] AmplitudeModulation(double[] firstSignal, double[] secondSignal)
         {
-            // Поэлементное умножение массивов
-            double[] result = new double[sig1.Length];
-            for (int i = 0; i < sig1.Length; i++)
+            double[] result = new double[firstSignal.Length];
+            for (int i = 0; i < firstSignal.Length; i++)
             {
-                result[i] = sig1[i] * sig2[i];
+                result[i] = firstSignal[i] * secondSignal[i];
             }
             return result;
         }
-
 
         private double[] FrequencyModulation(double[] signal, double modCoefficient)
         {
@@ -158,8 +214,6 @@ namespace SignalModeling
             return result;
         }
 
-
-
         private double[] PhaseModulation(double[] signal, double modCoefficient)
         {
             double[] result = new double[timeValues.Length];
@@ -169,7 +223,6 @@ namespace SignalModeling
             }
             return result;
         }
-
 
         private (double[], double[]) CalculateSpectrum(double[] signal)
         {
@@ -188,25 +241,50 @@ namespace SignalModeling
             Complex[] fftInput = signal.Select(x => new Complex(x, 0)).ToArray();
             FourierTransform.FFT(fftInput, FourierTransform.Direction.Forward);
 
-            double[] frequencies = new double[n / 2];
-            for (int i = 0; i < n / 2; i++)
-                frequencies[i] = i * SamplingRate / n;
+            double[] frequencies = new double[fftSize / 2];
+            double[] magnitudes = new double[fftSize / 2];
 
-            fftInput[0] = Complex.Zero;
-
-            double[] magnitude = new double[fftSize / 2];
             for (int i = 0; i < fftSize / 2; i++)
-                magnitude[i] = fftInput[i].Magnitude;
+            {
+                frequencies[i] = i * SamplingRate / fftSize;
+                magnitudes[i] = 2 * fftInput[i].Magnitude / fftSize;
+            }
 
-            return (frequencies, magnitude);
+            return (frequencies, magnitudes);
         }
+
+        private double[] FilterSpectrum(double[] frequencies, double[] spectrum, double lowThreshold, double highThreshold)
+        {
+            // Реализация пороговой фильтрации
+            double[] filteredSpectrum = new double[spectrum.Length];
+
+            // Применение фильтра
+            for (int i = 0; i < spectrum.Length; i++)
+            {
+                if (Math.Abs(frequencies[i]) >= lowThreshold && Math.Abs(frequencies[i]) <= highThreshold)
+                {
+                    filteredSpectrum[i] = spectrum[i];
+                }
+                else
+                {
+                    filteredSpectrum[i] = 0;
+                }
+            }
+
+            return filteredSpectrum;
+        }
+
+
+
+
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             for (int i = 0; i < plotModels.Length; i++)
             {
                 var plotView = new OxyPlot.Wpf.PlotView();
-                plotView.Model = plotModels[i];
+                plotView.Model = ClonePlotModel(plotModels[i]);
+
                 plotView.Width = 430;
                 plotView.Height = 253;
 
@@ -214,12 +292,66 @@ namespace SignalModeling
             }
         }
 
+        private PlotModel ClonePlotModel(PlotModel original)
+        {
+            var clone = new PlotModel();
+
+            // Копируем свойства
+            clone.Title = original.Title;
+
+            // Копируем серии
+            foreach (var series in original.Series)
+            {
+                if (series is LineSeries lineSeries)
+                {
+                    var newSeries = new LineSeries
+                    {
+                        Color = lineSeries.Color,
+                        LineStyle = lineSeries.LineStyle,
+                        MarkerType = lineSeries.MarkerType,
+                        MarkerSize = lineSeries.MarkerSize,
+                        MarkerStroke = lineSeries.MarkerStroke,
+                        MarkerStrokeThickness = lineSeries.MarkerStrokeThickness
+                    };
+
+                    // Копируем точки
+                    foreach (var point in lineSeries.Points)
+                    {
+                        newSeries.Points.Add(new DataPoint(point.X, point.Y));
+                    }
+
+                    clone.Series.Add(newSeries);
+                }
+                // Может потребоваться добавить код для других типов серий, которые вы используете
+
+            }
+
+            // Копируем оси
+            foreach (var axis in original.Axes)
+            {
+                if (axis is LinearAxis linearAxis)
+                {
+                    var newAxis = new LinearAxis
+                    {
+                        Position = linearAxis.Position,
+                        Title = linearAxis.Title,
+                        Minimum = linearAxis.Minimum,
+                        Maximum = linearAxis.Maximum
+                    };
+
+                    clone.Axes.Add(newAxis);
+                }
+                // Может потребоваться добавить код для других типов осей, которые вы используете
+            }
+
+            return clone;
+        }
+
+
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             MessageBox.Show("Closing event called");
             Closing += Window_Closing;
-
         }
-
     }
 }
