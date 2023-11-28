@@ -201,8 +201,8 @@ namespace SignalModeling
                 var filteredSpectrumModel = plotModels[plotIndex];
                 filteredSpectrumModel.Series.Add(filteredSpectrumSeries);
                 filteredSpectrumModel.Title = title;
-                filteredSpectrumModel.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, Title = "Frequency (Hz)", Minimum = 0, Maximum = 100 });
-                filteredSpectrumModel.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Title = "Magnitude" });
+                filteredSpectrumModel.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, Minimum = 0, Maximum = 100 });
+                filteredSpectrumModel.Axes.Add(new LinearAxis { Position = AxisPosition.Left });
             }
             else
                 Console.WriteLine($"Invalid filtered spectrum plot index: {plotIndex}");
