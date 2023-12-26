@@ -81,14 +81,72 @@ namespace SignalModeling
             var filteredPhaseModulatedSpectrum = FilterSpectrum(phaseModulatedSpectrum.Item1, phaseModulatedSpectrum.Item2, 25, 35);
             PlotFilteredSpectrumGraph(phaseModulatedSpectrum.Item1, filteredPhaseModulatedSpectrum, "Filtered Spectrum of Phase Modulated", plotIndex++);
 
-
             // Synthesized and Envelope Signal
             var synthesizedSignal = SynthesizeSignal(filteredAmplitudeModulatedSpectrum);
             var envelope = CalculateEnvelope(synthesizedSignal);
             PlotSynthesizedSignalAndEnvelope(synthesizedSignal, envelope, "Synthesized and Envelope", plotIndex++);
 
+            // Извлечение сигнала из огибающей
+            double threshold = 0.1; // Значение порога можно настраивать
+            var extractedSignal = ExtractSignalFromEnvelope(envelope, threshold);
+
+            // Построение графика извлеченного сигнала в новом окне
+            PlotExtractedSignal(extractedSignal, envelope, "Extracted Signal");
+
             ShowPlots();
         }
+
+        private void PlotExtractedSignal(double[] extractedSignal, double[] envelope, string title)
+        {
+            var plotModel = new PlotModel();
+            var extractedSignalSeries = new LineSeries();
+            var envelopeSeries = new LineSeries();
+
+            for (int i = 0; i < extractedSignal.Length; i++)
+            {
+                extractedSignalSeries.Points.Add(new DataPoint(timeValues[i], extractedSignal[i]));
+                envelopeSeries.Points.Add(new DataPoint(timeValues[i], envelope[i]));
+            }
+
+            plotModel.Series.Add(extractedSignalSeries);
+            plotModel.Series.Add(envelopeSeries);
+            plotModel.Title = title;
+
+            var plotView = new OxyPlot.Wpf.PlotView();
+            plotView.Model = plotModel;
+            plotView.Width = 430;
+            plotView.Height = 253;
+
+            var newWindow = new Window();
+            newWindow.Title = title;
+            newWindow.Content = plotView;
+            newWindow.Show();
+        }
+
+
+        private double[] ExtractSignalFromEnvelope(double[] envelope, double threshold)
+        {
+            double[] extractedSignal = new double[envelope.Length];
+
+            // Умножение огибающей на саму себя
+            for (int i = 0; i < envelope.Length; i++)
+            {
+                extractedSignal[i] = envelope[i] * envelope[i];
+            }
+
+            // Пороговая фильтрация
+            for (int i = 0; i < envelope.Length; i++)
+            {
+                if (extractedSignal[i] > threshold)
+                    extractedSignal[i] = envelope[i];
+                else
+                    extractedSignal[i] = 0;
+            }
+
+            return extractedSignal;
+        }
+
+
 
         private double[] SynthesizeSignal(double[] filteredSpectrum)
         {
